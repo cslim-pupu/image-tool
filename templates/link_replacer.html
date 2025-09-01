@@ -88,14 +88,21 @@
         }
         .form-control.result-textarea {
             background: #ffffff;
-            color: #000000;
+            color: #000000 !important;
             border: 1px solid #e5e7eb;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
         }
         .form-control.result-textarea:focus {
             background: #ffffff;
-            color: #000000;
+            color: #000000 !important;
             border-color: #d1d5db;
             box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+        .form-control.result-textarea::selection {
+            background: #007AFF;
+            color: #ffffff;
         }
         .btn-primary {
             background: #007AFF;
