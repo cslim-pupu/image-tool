@@ -1,0 +1,90 @@
+<style>
+.custom-navbar {
+    width: 80px;
+    background: rgba(17, 17, 17, 0.8);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+}
+
+.navbar-item {
+    width: 48px;
+    height: 48px;
+    margin: 4px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    text-decoration: none;
+}
+
+.navbar-item:hover {
+    background: rgba(0, 122, 255, 0.2);
+    border-color: rgba(0, 122, 255, 0.3);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.navbar-item.active {
+    background: rgba(0, 122, 255, 0.3);
+    border-color: rgba(0, 122, 255, 0.5);
+}
+
+.navbar-item svg {
+    width: 24px;
+    height: 24px;
+    color: #ffffff;
+    fill: currentColor;
+}
+
+.tooltip {
+    position: absolute;
+    left: 60px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1001;
+}
+
+.navbar-item:hover .tooltip {
+    opacity: 1;
+}
+</style>
+
+<nav class="custom-navbar">
+    <a href="/" class="navbar-item {{ 'active' if request.endpoint == 'home' else '' }}">
+        <svg viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
+        </svg>
+        <div class="tooltip">主页</div>
+    </a>
+    <a href="/link-replacer" class="navbar-item {{ 'active' if request.endpoint == 'link_replacer' else '' }}" title="图片替换工具">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+        </svg>
+        <div class="tooltip">图片替换工具</div>
+    </a>
+    <a href="/image-extractor" class="navbar-item {{ 'active' if request.endpoint == 'image_extractor' else '' }}">
+        <svg viewBox="0 0 24 24">
+            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path>
+        </svg>
+        <div class="tooltip">图片抓取工具</div>
+    </a>
+</nav>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能图片处理工具集</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #ffffff;
+            display: flex;
+        }
+        
+
+        
+        .main-content {
+            margin-left: 80px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .hero-container {
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: #a1a1aa;
+            margin-bottom: 4rem;
+            font-weight: 300;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+        
+        .product-card {
+            background: rgba(18, 18, 18, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 122, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 122, 255, 0.1);
+        }
+        
+        .product-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.5rem;
+            background: rgba(0, 122, 255, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .product-icon svg {
+            width: 32px;
+            height: 32px;
+            color: #007AFF;
+        }
+        
+        .product-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+        
+        .product-description {
+            color: #a1a1aa;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .product-features {
+            list-style: none;
+            text-align: left;
+        }
+        
+        .product-features li {
+            color: #d4d4d8;
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .product-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #007AFF;
+            font-weight: bold;
+        }
+        
+        .tech-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tech-grid"></div>
+    
+    <!-- 导航栏 -->
+    {% include 'navbar.html' %}
+    
+    <!-- 主内容 -->
+    <div class="main-content">
+        <div class="hero-container">
+            <h1 class="hero-title">智能图片处理工具集</h1>
+            <p class="hero-subtitle">专业的图片处理解决方案，提升您的工作效率</p>
+            
+            <div class="products-grid">
+                <a href="/svg-replacer" class="product-card">
+                    <div class="product-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="product-title">SVG图片链接替换工具</h3>
+                    <p class="product-description">
+                        智能识别并替换SVG代码中的图片链接，自动上传到微信公众号图床，解决图片显示问题。
+                    </p>
+                    <ul class="product-features">
+                        <li>智能识别SVG中的图片链接</li>
+                        <li>自动检测图片大小和格式</li>
+                        <li>一键上传到微信公众号图床</li>
+                        <li>批量处理多个图片</li>
+                        <li>支持手动替换模式</li>
+                    </ul>
+                </a>
+                
+                <a href="/image-extractor" class="product-card">
+                    <div class="product-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                        </svg>
+                    </div>
+                    <h3 class="product-title">网页图片抓取工具</h3>
+                    <p class="product-description">
+                        从任意网页中智能提取所有图片，显示详细信息，支持单独下载或批量打包下载。
+                    </p>
+                    <ul class="product-features">
+                        <li>智能抓取网页中的所有图片</li>
+                        <li>显示图片尺寸和文件大小</li>
+                        <li>支持单张图片下载</li>
+                        <li>批量打包下载功能</li>
+                        <li>实时预览图片内容</li>
+                    </ul>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
