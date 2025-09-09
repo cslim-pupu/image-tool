@@ -43,16 +43,38 @@ class URLImageExtractor:
             # 解析HTML
             soup = BeautifulSoup(response.content, 'html.parser')
             
-            # 查找所有图片标签
-            img_tags = soup.find_all('img')
-            
             images = []
+            processed_urls = set()  # 避免重复
+            
+            # 方法1: 查找所有图片标签
+            img_tags = soup.find_all('img')
             for i, img in enumerate(img_tags):
                 img_info = self._process_image_tag(img, url, i)
-                if img_info:
+                if img_info and img_info['url'] not in processed_urls and img_info['url'].startswith('https://mmbiz.qpic.cn/'):
                     images.append(img_info)
+                    processed_urls.add(img_info['url'])
             
-            logger.info(f"成功抓取到 {len(images)} 张图片")
+            # 方法2: 使用正则表达式匹配页面中的微信公众号图片URL
+            # 只抓取 https://mmbiz.qpic.cn/ 开头的图片
+            img_url_pattern = r'https://mmbiz\.qpic\.cn/[^\s"\'>]+'
+            found_urls = set(re.findall(img_url_pattern, response.text, re.IGNORECASE))
+            
+            for i, img_url in enumerate(found_urls):
+                if img_url not in processed_urls and img_url.startswith('https://mmbiz.qpic.cn/'):
+                    # 跳过base64和SVG
+                    if img_url.startswith('data:') or img_url.endswith('.svg'):
+                        continue
+                    
+                    try:
+                        img_info = self._get_image_info(img_url, len(images))
+                        if img_info:
+                            images.append(img_info)
+                            processed_urls.add(img_url)
+                    except Exception as e:
+                        logger.warning(f"处理正则匹配的图片URL失败: {img_url}, 错误: {str(e)}")
+                        continue
+            
+            logger.info(f"成功抓取到 {len(images)} 张图片 (img标签: {len(img_tags)}, 正则匹配: {len(found_urls)})")
             return images
             
         except requests.RequestException as e:
