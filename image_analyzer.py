@@ -78,8 +78,19 @@ class ImageAnalyzer:
     def get_image_size(self, url: str) -> Tuple[int, str]:
         """获取图片大小（字节）和格式化大小字符串"""
         try:
+            # 为微信图片设置特殊的请求头，解决防盗链问题
+            headers = self.session.headers.copy()
+            if 'qpic.cn' in url:
+                headers.update({
+                    'Referer': 'https://mp.weixin.qq.com/',
+                    'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+                    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                })
+            
             # 发送HEAD请求获取Content-Length
-            response = self.session.head(url, timeout=10, allow_redirects=True)
+            response = self.session.head(url, headers=headers, timeout=10, allow_redirects=True)
             
             if response.status_code == 200:
                 content_length = response.headers.get('Content-Length')
@@ -89,7 +100,7 @@ class ImageAnalyzer:
                     return size_bytes, size_str
             
             # 如果HEAD请求失败，尝试GET请求（只获取部分内容）
-            response = self.session.get(url, timeout=10, stream=True)
+            response = self.session.get(url, headers=headers, timeout=10, stream=True)
             if response.status_code == 200:
                 content_length = response.headers.get('Content-Length')
                 if content_length:

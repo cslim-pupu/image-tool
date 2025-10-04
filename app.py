@@ -86,6 +86,54 @@ def analyze_svg():
         logger.error(f"分析SVG时发生未知错误: {str(e)}")
         return jsonify({'error': f'分析失败: {str(e)}'}), 500
 
+@app.route('/image_proxy')
+def image_proxy():
+    """图片代理，解决防盗链问题"""
+    try:
+        url = request.args.get('url')
+        if not url:
+            return jsonify({'error': '缺少URL参数'}), 400
+        
+        # 设置请求头，特别是对微信图片的处理
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        # 如果是微信图片，添加特殊的请求头
+        if 'qpic.cn' in url:
+            headers.update({
+                'Referer': 'https://mp.weixin.qq.com/',
+                'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            })
+        
+        # 发送请求获取图片
+        import requests
+        response = requests.get(url, headers=headers, timeout=10, stream=True)
+        response.raise_for_status()
+        
+        # 检查是否是图片内容
+        content_type = response.headers.get('content-type', '')
+        if not content_type.startswith('image/'):
+            return jsonify({'error': '不是有效的图片内容'}), 400
+        
+        # 返回图片数据
+        from flask import Response
+        return Response(
+            response.content,
+            content_type=content_type,
+            headers={
+                'Cache-Control': 'public, max-age=3600',  # 缓存1小时
+                'Access-Control-Allow-Origin': '*'
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"图片代理出错: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/replace_url', methods=['POST'])
 def replace_url():
     """替换单个图片URL"""

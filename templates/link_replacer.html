@@ -456,10 +456,17 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td style="max-width: 200px;">
-                        <a href="${img.url}" target="_blank" class="text-decoration-none" style="color: #9CA3AF;">
-                            <i class="bi bi-box-arrow-up-right"></i> 
-                            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; max-width: 150px; vertical-align: top;">${img.url}</span>
-                        </a>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <img src="/image_proxy?url=${encodeURIComponent(img.url)}" 
+                                 alt="图片预览" 
+                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e7eb;"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                            <span style="display: none; width: 40px; height: 40px; background: #f3f4f6; border-radius: 4px; border: 1px solid #e5e7eb; text-align: center; line-height: 38px; font-size: 12px; color: #6b7280;">无法<br>预览</span>
+                            <a href="${img.url}" target="_blank" class="text-decoration-none" style="color: #9CA3AF;">
+                                <i class="bi bi-box-arrow-up-right"></i> 
+                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; max-width: 120px; vertical-align: top;">${img.url}</span>
+                            </a>
+                        </div>
                     </td>
                     <td class="${img.size_category === 'red' ? 'text-danger fw-bold' : img.size_category === 'orange' ? 'text-warning fw-bold' : img.size_category === 'yellow' ? 'text-warning' : 'text-success'}">
                         ${img.size_str}
