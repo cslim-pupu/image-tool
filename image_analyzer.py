@@ -19,18 +19,37 @@ class ImageAnalyzer:
     def extract_image_urls_from_svg(self, svg_content: str) -> List[str]:
         """从SVG代码中提取所有图片URL"""
         try:
+            # 先处理HTML编码
+            import html
+            decoded_content = html.unescape(svg_content)
+            
             # 匹配各种图片URL模式
             patterns = [
+                # 传统图片扩展名结尾的URL
                 r'src=["\']([^"\'>]+\.(jpg|jpeg|png|gif|webp|svg))["\']',  # src属性
                 r'href=["\']([^"\'>]+\.(jpg|jpeg|png|gif|webp|svg))["\']',  # href属性
                 r'url\(["\']?([^"\')>]+\.(jpg|jpeg|png|gif|webp|svg))["\']?\)',  # CSS url()
                 r'background-image:[^;]*url\(["\']?([^"\')>]+\.(jpg|jpeg|png|gif|webp|svg))["\']?\)',  # background-image
                 r'xlink:href=["\']([^"\'>]+\.(jpg|jpeg|png|gif|webp|svg))["\']',  # xlink:href
+                
+                # 微信公众号图床URL（支持各种属性和CSS样式）
+                r'src=["\']([^"\'>]*(?:mmbiz\.qpic\.cn|mmecoa\.qpic\.cn)[^"\'>]*)["\']',  # src属性中的微信图床
+                r'href=["\']([^"\'>]*(?:mmbiz\.qpic\.cn|mmecoa\.qpic\.cn)[^"\'>]*)["\']',  # href属性中的微信图床
+                r'url\(["\']?([^"\')>]*(?:mmbiz\.qpic\.cn|mmecoa\.qpic\.cn)[^"\')>]*)["\']?\)',  # CSS url()中的微信图床
+                r'background-image:[^;]*url\(["\']?([^"\')>]*(?:mmbiz\.qpic\.cn|mmecoa\.qpic\.cn)[^"\')>]*)["\']?\)',  # background-image中的微信图床
+                r'xlink:href=["\']([^"\'>]*(?:mmbiz\.qpic\.cn|mmecoa\.qpic\.cn)[^"\'>]*)["\']',  # xlink:href中的微信图床
+                
+                # 其他常见图床URL（如oss.e2.cool等）
+                r'src=["\']([^"\'>]*oss\.e2\.cool[^"\'>]*)["\']',
+                r'href=["\']([^"\'>]*oss\.e2\.cool[^"\'>]*)["\']',
+                r'url\(["\']?([^"\')>]*oss\.e2\.cool[^"\')>]*)["\']?\)',
+                r'background-image:[^;]*url\(["\']?([^"\')>]*oss\.e2\.cool[^"\')>]*)["\']?\)',
+                r'xlink:href=["\']([^"\'>]*oss\.e2\.cool[^"\'>]*)["\']',
             ]
             
             urls = set()
             for pattern in patterns:
-                matches = re.findall(pattern, svg_content, re.IGNORECASE)
+                matches = re.findall(pattern, decoded_content, re.IGNORECASE)
                 for match in matches:
                     if isinstance(match, tuple):
                         url = match[0]
