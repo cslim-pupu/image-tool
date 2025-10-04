@@ -188,7 +188,8 @@
 
         .image-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
+            gap: 20px;
             padding: 15px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
@@ -200,6 +201,10 @@
 
         .image-item:hover {
             background-color: rgba(63, 63, 70, 0.4) !important;
+        }
+
+        .image-preview {
+            flex-shrink: 0;
         }
 
         .image-info {
@@ -504,9 +509,22 @@
                  </div>
              `;
              
+             // 判断是否为微信图片，决定使用代理链接
+             const isWechatImage = image.url.includes('qpic.cn');
+             const displayUrl = isWechatImage ? `/image_proxy?url=${encodeURIComponent(image.url)}` : image.url;
+             const previewUrl = isWechatImage ? `/image_proxy?url=${encodeURIComponent(image.url)}` : image.url;
+             
              item.innerHTML = `
+                 <div class="image-preview">
+                     <img src="${previewUrl}" alt="图片预览" 
+                          style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);"
+                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                     <div style="display: none; width: 120px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 8px; align-items: center; justify-content: center; color: #666; font-size: 12px;">
+                         预览失败
+                     </div>
+                 </div>
                  <div class="image-info">
-                     <div class="image-url" onclick="window.open('${image.url}', '_blank')">${image.url}</div>
+                     <div class="image-url" onclick="window.open('${displayUrl}', '_blank')" title="点击打开图片">${image.url}</div>
                      <div class="image-details">
                          ${detailsHTML}
                      </div>
