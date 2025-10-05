@@ -201,6 +201,24 @@ class ImageAnalyzer:
     def replace_url_in_svg(self, svg_content: str, old_url: str, new_url: str) -> str:
         """在SVG代码中替换指定的图片URL"""
         try:
+            # 记录原始URL用于调试
+            logger.info(f"开始替换URL: {old_url} -> {new_url}")
+            logger.info(f"SVG内容长度: {len(svg_content)}")
+            
+            # 首先尝试直接字符串替换（最简单有效的方法）
+            if old_url in svg_content:
+                updated_content = svg_content.replace(old_url, new_url)
+                logger.info(f"直接字符串替换成功: {old_url}")
+                return updated_content
+            
+            # 检查是否有反引号包围的URL格式
+            backtick_pattern = f"`{re.escape(old_url)}`"
+            if backtick_pattern in svg_content:
+                updated_content = svg_content.replace(backtick_pattern, f"`{new_url}`")
+                logger.info(f"反引号格式替换成功: {backtick_pattern}")
+                return updated_content
+            
+            # 如果直接替换失败，尝试正则表达式替换
             # 转义特殊字符
             escaped_old_url = re.escape(old_url)
             
@@ -210,6 +228,10 @@ class ImageAnalyzer:
                 (f'href=["\']({escaped_old_url})["\']', f'href="{new_url}"'),
                 (f'url\(["\']?({escaped_old_url})["\']?\)', f'url("{new_url}")'),
                 (f'xlink:href=["\']({escaped_old_url})["\']', f'xlink:href="{new_url}"'),
+                # 添加对反引号包围URL的正则表达式支持
+                (f'`({escaped_old_url})`', f'`{new_url}`'),
+                # 添加对HTML实体编码的URL支持
+                (f'&quot;\\s*`({escaped_old_url})`\\s*&quot;', f'&quot;`{new_url}`&quot;'),
             ]
             
             updated_content = svg_content
@@ -220,11 +242,14 @@ class ImageAnalyzer:
                 if new_content != updated_content:
                     replaced_count += 1
                     updated_content = new_content
+                    logger.info(f"正则表达式替换成功，模式: {pattern}")
             
             if replaced_count > 0:
                 logger.info(f"成功替换URL: {old_url} -> {new_url}")
             else:
                 logger.warning(f"未找到要替换的URL: {old_url}")
+                # 输出调试信息
+                logger.warning(f"SVG内容前200字符: {svg_content[:200]}")
             
             return updated_content
             
