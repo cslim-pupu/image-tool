@@ -211,27 +211,73 @@ class ImageAnalyzer:
                 logger.info(f"直接字符串替换成功: {old_url}")
                 return updated_content
             
+            # 处理HTML实体编码的URL（&符号被编码为&amp;）
+            html_encoded_url = old_url.replace('&', '&amp;')
+            if html_encoded_url in svg_content:
+                new_html_encoded_url = new_url.replace('&', '&amp;')
+                updated_content = svg_content.replace(html_encoded_url, new_html_encoded_url)
+                logger.info(f"HTML编码URL替换成功: {html_encoded_url}")
+                return updated_content
+            
+            # 检查HTML实体编码格式：url(&quot;URL&quot;);
+            html_entity_pattern = f"&quot;{old_url}&quot;"
+            if html_entity_pattern in svg_content:
+                updated_content = svg_content.replace(html_entity_pattern, f"&quot;{new_url}&quot;")
+                logger.info(f"HTML实体格式替换成功: {html_entity_pattern}")
+                return updated_content
+            
+            # 检查HTML实体编码格式（带HTML编码的&符号）
+            html_entity_encoded_pattern = f"&quot;{html_encoded_url}&quot;"
+            if html_entity_encoded_pattern in svg_content:
+                new_html_encoded_url = new_url.replace('&', '&amp;')
+                updated_content = svg_content.replace(html_entity_encoded_pattern, f"&quot;{new_html_encoded_url}&quot;")
+                logger.info(f"HTML实体编码格式替换成功: {html_entity_encoded_pattern}")
+                return updated_content
+            
+            # 检查公众号特殊格式：url(&quot; `URL&quot;);` 
+            wechat_pattern = f"&quot; `{old_url}&quot;);` "
+            if wechat_pattern in svg_content:
+                updated_content = svg_content.replace(wechat_pattern, f"&quot; `{new_url}&quot;);` ")
+                logger.info(f"微信公众号格式替换成功: {wechat_pattern}")
+                return updated_content
+            
             # 检查是否有反引号包围的URL格式
-            backtick_pattern = f"`{re.escape(old_url)}`"
+            backtick_pattern = f"`{old_url}`"
             if backtick_pattern in svg_content:
                 updated_content = svg_content.replace(backtick_pattern, f"`{new_url}`")
                 logger.info(f"反引号格式替换成功: {backtick_pattern}")
                 return updated_content
             
+            # 检查复杂的HTML实体编码格式：url(&quot; `URL` &quot;);
+            complex_pattern = f"&quot; `{old_url}` &quot;"
+            if complex_pattern in svg_content:
+                updated_content = svg_content.replace(complex_pattern, f"&quot; `{new_url}` &quot;")
+                logger.info(f"复杂HTML实体格式替换成功: {complex_pattern}")
+                return updated_content
+            
             # 如果直接替换失败，尝试正则表达式替换
             # 转义特殊字符
             escaped_old_url = re.escape(old_url)
+            escaped_html_encoded_url = re.escape(html_encoded_url)
             
             # 替换各种可能的URL格式
             patterns = [
                 (f'src=["\']({escaped_old_url})["\']', f'src="{new_url}"'),
                 (f'href=["\']({escaped_old_url})["\']', f'href="{new_url}"'),
-                (f'url\(["\']?({escaped_old_url})["\']?\)', f'url("{new_url}")'),
+                (rf'url\(["\']?({escaped_old_url})["\']?\)', f'url("{new_url}")'),
                 (f'xlink:href=["\']({escaped_old_url})["\']', f'xlink:href="{new_url}"'),
+                # HTML实体编码的URL支持
+                (f'&quot;({escaped_old_url})&quot;', f'&quot;{new_url}&quot;'),
+                (f'&quot;({escaped_html_encoded_url})&quot;', f'&quot;{new_url.replace("&", "&amp;")}&quot;'),
                 # 添加对反引号包围URL的正则表达式支持
                 (f'`({escaped_old_url})`', f'`{new_url}`'),
-                # 添加对HTML实体编码的URL支持
-                (f'&quot;\\s*`({escaped_old_url})`\\s*&quot;', f'&quot;`{new_url}`&quot;'),
+                # 微信公众号特殊格式支持
+                (rf'&quot;\s*`({escaped_old_url})&quot;\);\s*`\s*', f'&quot; `{new_url}&quot;);` '),
+                # 添加对HTML实体编码的URL支持 - 更精确的模式
+                (rf'&quot;\s*`({escaped_old_url})`\s*&quot;', f'&quot; `{new_url}` &quot;'),
+                # 添加对完整CSS url()格式的支持
+                (rf'url\(&quot;({escaped_old_url})&quot;\)', f'url(&quot;{new_url}&quot;)'),
+                (rf'url\(&quot;({escaped_html_encoded_url})&quot;\)', f'url(&quot;{new_url.replace("&", "&amp;")}&quot;)'),
             ]
             
             updated_content = svg_content
@@ -249,7 +295,11 @@ class ImageAnalyzer:
             else:
                 logger.warning(f"未找到要替换的URL: {old_url}")
                 # 输出调试信息
-                logger.warning(f"SVG内容前200字符: {svg_content[:200]}")
+                logger.warning(f"SVG内容前500字符: {svg_content[:500]}")
+                # 输出所有尝试的模式
+                logger.warning(f"尝试的HTML实体模式: {html_entity_pattern}")
+                logger.warning(f"尝试的HTML编码模式: {html_entity_encoded_pattern}")
+                logger.warning(f"尝试的微信公众号模式: {wechat_pattern}")
             
             return updated_content
             

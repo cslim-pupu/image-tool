@@ -324,9 +324,24 @@
                         <textarea class="form-control" id="svgContent" rows="12" 
                             placeholder="请在此处粘贴SVG代码"></textarea>
                     </div>
-                    <button type="button" class="btn btn-primary btn-lg" onclick="analyzeSVG()">
-                        分析图片
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="analyzeSVG()">
+                            分析图片
+                        </button>
+                        <button type="button" class="btn btn-lg" onclick="clearSVG()" 
+                                style="background: #6c757d; 
+                                       color: #ffffff; 
+                                       border: none; 
+                                       border-radius: 12px; 
+                                       padding: 0.75rem 1.5rem; 
+                                       font-weight: 500; 
+                                       font-size: 0.95rem; 
+                                       transition: all 0.2s ease;"
+                                onmouseover="this.style.background='#5a6268'; this.style.transform='translateY(-1px)';"
+                                onmouseout="this.style.background='#6c757d'; this.style.transform='translateY(0)';">
+                            <i class="bi bi-trash"></i> 清空
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 图片分析结果表格 -->
@@ -534,6 +549,12 @@
                 return;
             }
             
+            // 确定要替换的URL：如果已经替换过，使用当前的微信图床地址，否则使用原始URL
+            let oldUrlToReplace = imageInfo.url;
+            if (imageInfo.replaced && imageInfo.wechat_url) {
+                oldUrlToReplace = imageInfo.wechat_url;
+            }
+            
             isProcessing = true;
             showProgress('正在替换图片地址...');
             
@@ -544,7 +565,7 @@
                 },
                 body: JSON.stringify({
                     svg_content: currentSVG,
-                    old_url: imageInfo.url,
+                    old_url: oldUrlToReplace,
                     new_url: wechatURL
                 })
             })
@@ -556,18 +577,32 @@
                     imageInfo.wechat_url = wechatURL;
                     imageInfo.replaced = true;
                     
-                    // 更新按钮状态
+                    // 更新按钮状态 - 保持可用状态，支持多次替换
                     const button = document.querySelector(`button[onclick="replaceURL('${imageId}')"]`);
-                    button.innerHTML = '<i class="bi bi-check-circle"></i> 已替换';
-                    button.className = 'btn btn-sm btn-success';
-                    button.style.background = '#007AFF';
+                    button.innerHTML = '<i class="bi bi-arrow-repeat"></i> 重新替换';
+                    button.className = 'btn btn-sm btn-warning';
+                    button.style.background = '#FF9500';
                     button.style.color = 'white';
                     button.style.border = 'none';
                     button.style.borderRadius = '8px';
                     
-                    // 标记行为已替换
+                    // 标记行为已替换，但使用更温和的颜色
                     const row = button.closest('tr');
-                    row.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+                    row.style.backgroundColor = 'rgba(255, 149, 0, 0.1)';
+                    
+                    // 在输入框旁边显示当前使用的图床地址
+                    const inputContainer = wechatInput.parentElement;
+                    let statusSpan = inputContainer.querySelector('.current-url-status');
+                    if (!statusSpan) {
+                        statusSpan = document.createElement('small');
+                        statusSpan.className = 'current-url-status text-success';
+                        statusSpan.style.display = 'block';
+                        statusSpan.style.marginTop = '4px';
+                        statusSpan.style.fontSize = '12px';
+                        inputContainer.appendChild(statusSpan);
+                    }
+                    statusSpan.innerHTML = `<i class="bi bi-check-circle"></i> 当前使用: ${wechatURL.substring(0, 50)}${wechatURL.length > 50 ? '...' : ''}`;
+                    statusSpan.style.color = '#28a745';
                     
                     updateResult();
                     
@@ -589,7 +624,7 @@
                             <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                             </svg>
-                            图片地址替换完成
+                            图片地址替换完成！可以继续修改或重新替换
                             <button type="button" style="background: none; border: none; color: white; margin-left: auto; font-size: 18px; cursor: pointer;" onclick="this.parentElement.parentElement.remove()">×</button>
                         </div>
                     `;
@@ -672,6 +707,53 @@
                 if (progress > 90) progress = 90;
                 progressBar.style.width = progress + '%';
             }, 200);
+        }
+        
+        function clearSVG() {
+            // 清空SVG输入框
+            document.getElementById('svgContent').value = '';
+            
+            // 隐藏分析结果表格
+            document.getElementById('imagesTable').style.display = 'none';
+            
+            // 隐藏结果区域
+            document.getElementById('resultSection').style.display = 'none';
+            
+            // 重置全局变量
+            imageData = [];
+            currentSVG = '';
+            
+            // 显示清空成功提示
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert alert-info alert-dismissible fade show';
+            successDiv.style.position = 'fixed';
+            successDiv.style.top = '20px';
+            successDiv.style.right = '20px';
+            successDiv.style.zIndex = '9999';
+            successDiv.style.minWidth = '300px';
+            successDiv.style.background = 'rgba(59, 130, 246, 0.9)';
+            successDiv.style.border = '1px solid rgba(59, 130, 246, 0.3)';
+            successDiv.style.backdropFilter = 'blur(20px)';
+            successDiv.style.borderRadius = '12px';
+            successDiv.style.boxShadow = '0 8px 32px rgba(59, 130, 246, 0.3)';
+            successDiv.innerHTML = `
+                <div style="display: flex; align-items: center; color: white; font-weight: 500;">
+                    <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    内容已清空，可以重新输入
+                    <button type="button" style="background: none; border: none; color: white; margin-left: auto; font-size: 18px; cursor: pointer;" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            document.body.appendChild(successDiv);
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.parentNode.removeChild(successDiv);
+                }
+            }, 3000);
         }
         
         function hideProgress() {
