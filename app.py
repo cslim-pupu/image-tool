@@ -9,7 +9,7 @@ import os
 import tempfile
 import uuid
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for
+from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for, make_response
 from werkzeug.utils import secure_filename
 import json
 import logging
@@ -51,7 +51,11 @@ def home():
 @app.route('/link-replacer')
 def link_replacer():
     """图片链接替换工具页面"""
-    return render_template('link_replacer.html')
+    response = make_response(render_template('link_replacer.html'))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/image-extractor')
 def image_extractor():
