@@ -355,8 +355,9 @@
                             <table class="table table-hover mb-0" style="background: rgba(39, 39, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; overflow: hidden; color: #ffffff;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 30%; background: rgba(0, 0, 0, 0.3); border: none; font-weight: 500; color: #ffffff; padding: 1rem; font-size: 0.875rem;">图片地址</th>
-                                        <th style="width: 15%; background: rgba(0, 0, 0, 0.3); border: none; font-weight: 500; color: #ffffff; padding: 1rem; font-size: 0.875rem;">大小</th>
+                                        <th style="width: 25%; background: rgba(0, 0, 0, 0.3); border: none; font-weight: 500; color: #ffffff; padding: 1rem; font-size: 0.875rem;">图片地址</th>
+                                        <th style="width: 12%; background: rgba(0, 0, 0, 0.3); border: none; font-weight: 500; color: #ffffff; padding: 1rem; font-size: 0.875rem;">大小</th>
+                                        <th style="width: 13%; background: rgba(0, 0, 0, 0.3); border: none; font-weight: 500; color: #ffffff; padding: 1rem; font-size: 0.875rem;">尺寸</th>
                                         <th style="width: 35%; background: rgba(0, 0, 0, 0.3); border: none; font-weight: 500; color: #ffffff; padding: 1rem; font-size: 0.875rem;">微信图床地址</th>
                                         <th style="width: 15%; background: rgba(0, 0, 0, 0.3); border: none; font-weight: 500; color: #ffffff; padding: 1rem; font-size: 0.875rem;">操作</th>
                                     </tr>
@@ -485,6 +486,9 @@
                     </td>
                     <td class="${img.size_category === 'red' ? 'text-danger fw-bold' : img.size_category === 'orange' ? 'text-warning fw-bold' : img.size_category === 'yellow' ? 'text-warning' : 'text-success'}">
                         ${img.size_str}
+                    </td>
+                    <td style="color: #d4d4d8; font-size: 0.875rem;">
+                        ${img.dimensions_str || '未知'}
                     </td>
                     <td>
                         <input type="text" class="form-control form-control-sm" id="wechat-${img.id}" 

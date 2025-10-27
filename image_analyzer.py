@@ -1,9 +1,11 @@
 import requests
 import re
 from urllib.parse import urlparse
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 import logging
 from exceptions import ImageAnalysisError
+from PIL import Image
+import io
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +163,45 @@ class ImageAnalyzer:
         else:
             return 'green'  # 绿色：3MB以下
     
+    def get_image_dimensions(self, url: str) -> Optional[Tuple[int, int]]:
+        """获取图片尺寸（宽度，高度）"""
+        try:
+            # 为微信图片设置特殊的请求头，解决防盗链问题
+            headers = self.session.headers.copy()
+            if 'qpic.cn' in url:
+                headers.update({
+                    'Referer': 'https://mp.weixin.qq.com/',
+                    'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+                    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                })
+            
+            # 发送GET请求获取图片数据（只获取前几KB用于解析尺寸）
+            response = self.session.get(url, headers=headers, timeout=10, stream=True)
+            
+            if response.status_code == 200:
+                # 读取足够的数据来解析图片尺寸
+                image_data = b''
+                for chunk in response.iter_content(chunk_size=8192):
+                    image_data += chunk
+                    # 尝试解析尺寸，如果成功就停止下载
+                    try:
+                        with Image.open(io.BytesIO(image_data)) as img:
+                            return img.size  # 返回 (width, height)
+                    except:
+                        # 如果数据不够，继续下载
+                        if len(image_data) > 1024 * 1024:  # 超过1MB就停止
+                            break
+                        continue
+            
+            logger.warning(f"无法获取图片尺寸: {url}")
+            return None
+            
+        except Exception as e:
+            logger.warning(f"获取图片尺寸失败 {url}: {str(e)}")
+            return None
+    
     def analyze_svg_images(self, svg_content: str) -> List[Dict]:
         """分析SVG中的所有图片"""
         try:
@@ -171,6 +212,7 @@ class ImageAnalyzer:
                 logger.info(f"分析图片 {i}/{len(urls)}: {url}")
                 
                 size_bytes, size_str = self.get_image_size(url)
+                dimensions = self.get_image_dimensions(url)
                 
                 # 判断是否超过3MB
                 is_large = size_bytes > 3 * 1024 * 1024  # 3MB
@@ -183,6 +225,8 @@ class ImageAnalyzer:
                     'url': url,
                     'size_bytes': size_bytes,
                     'size_str': size_str,
+                    'dimensions': dimensions,  # 新增：图片尺寸 (width, height)
+                    'dimensions_str': f"{dimensions[0]}×{dimensions[1]}" if dimensions else "未知",  # 新增：格式化的尺寸字符串
                     'is_large': is_large,
                     'size_category': size_category,
                     'wechat_url': '',  # 用户手动输入的微信图床地址
