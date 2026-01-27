@@ -333,38 +333,63 @@
 
         /* 响应式设计 */
         @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
+             .main-content {
+                 margin-left: 0;
+                 padding: 20px;
+             }
 
-            .navbar {
-                display: none;
-            }
+             .navbar {
+                 display: none;
+             }
 
-            .url-input-group {
-                flex-direction: column;
-            }
+             .url-input-group {
+                 flex-direction: column;
+             }
 
-            .image-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+             .image-item {
+                 flex-direction: column;
+                 align-items: flex-start;
+             }
 
-            .image-info {
-                margin-right: 0;
-                margin-bottom: 15px;
-                width: 100%;
-            }
+             .image-info {
+                 margin-right: 0;
+                 margin-bottom: 15px;
+                 width: 100%;
+             }
 
-            .image-details {
-                flex-direction: column;
-                gap: 5px;
-            }
-        }
-    </style>
+             .image-details {
+                 flex-direction: column;
+                 gap: 5px;
+             }
+         }
+
+         /* 图片大图预览浮窗 */
+         #image-preview-popup {
+             position: fixed;
+             z-index: 10000;
+             display: none;
+             background: rgba(0, 0, 0, 0.9);
+             border: 1px solid rgba(255, 255, 255, 0.2);
+             border-radius: 8px;
+             padding: 5px;
+             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+             pointer-events: none;
+             max-width: 400px;
+             max-height: 400px;
+         }
+         #image-preview-popup img {
+             max-width: 100%;
+             max-height: 390px;
+             border-radius: 4px;
+             display: block;
+         }
+     </style>
 </head>
 <body>
+    <!-- 图片大图预览浮窗 -->
+    <div id="image-preview-popup">
+        <img src="" alt="大图预览">
+    </div>
     <!-- 导航栏 -->
     {% include 'navbar.html' %}
 
@@ -414,6 +439,55 @@
     <script>
         let currentImages = [];
         let downloadedImages = [];
+        let previewTimer = null;
+
+        function showImagePreview(url, event) {
+            const popup = document.getElementById('image-preview-popup');
+            const popupImg = popup.querySelector('img');
+            
+            previewTimer = setTimeout(() => {
+                popupImg.src = url;
+                popup.style.display = 'block';
+                
+                // 设置位置
+                const x = event.clientX + 20;
+                const y = event.clientY + 20;
+                
+                // 防止超出窗口
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                popup.style.left = (x + 400 > viewportWidth ? event.clientX - 420 : x) + 'px';
+                popup.style.top = (y + 400 > viewportHeight ? event.clientY - 420 : y) + 'px';
+            }, 1000);
+        }
+
+        function hideImagePreview() {
+            clearTimeout(previewTimer);
+            const popup = document.getElementById('image-preview-popup');
+            popup.style.display = 'none';
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showNotification('地址已复制到剪贴板', 'success');
+            } catch (err) {
+                console.error('无法复制: ', err);
+                // 备用方案
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showNotification('地址已复制到剪贴板', 'success');
+                } catch (err) {
+                    showNotification('复制失败', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+        }
 
         // DOM 元素
         const urlInput = document.getElementById('urlInput');
@@ -517,14 +591,16 @@
              item.innerHTML = `
                  <div class="image-preview">
                      <img src="${previewUrl}" alt="图片预览" 
-                          style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);"
+                          style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: zoom-in;"
+                          onmouseenter="showImagePreview('${previewUrl}', event)"
+                          onmouseleave="hideImagePreview()"
                           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                      <div style="display: none; width: 120px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 8px; align-items: center; justify-content: center; color: #666; font-size: 12px;">
                          预览失败
                      </div>
                  </div>
                  <div class="image-info">
-                     <div class="image-url" onclick="window.open('${displayUrl}', '_blank')" title="点击打开图片">${image.url}</div>
+                     <div class="image-url" onclick="copyToClipboard('${image.url}')" title="点击复制原始图片地址">${image.url}</div>
                      <div class="image-details">
                          ${detailsHTML}
                      </div>

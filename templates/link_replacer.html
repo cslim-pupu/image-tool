@@ -271,9 +271,34 @@
                  transform: translateX(100%);
              }
          }
+
+         /* 图片大图预览浮窗 */
+         #image-preview-popup {
+             position: fixed;
+             z-index: 10000;
+             display: none;
+             background: rgba(0, 0, 0, 0.9);
+             border: 1px solid rgba(255, 255, 255, 0.2);
+             border-radius: 8px;
+             padding: 5px;
+             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+             pointer-events: none;
+             max-width: 400px;
+             max-height: 400px;
+         }
+         #image-preview-popup img {
+             max-width: 100%;
+             max-height: 390px;
+             border-radius: 4px;
+             display: block;
+         }
      </style>
 </head>
 <body>
+    <!-- 图片大图预览浮窗 -->
+    <div id="image-preview-popup">
+        <img src="" alt="大图预览">
+    </div>
     <!-- 左侧导航栏 -->
     {% include 'navbar.html' %}
     
@@ -407,6 +432,55 @@
         let currentSVG = '';
         let imageData = [];
         let isProcessing = false;
+        let previewTimer = null;
+
+        function showImagePreview(url, event) {
+            const popup = document.getElementById('image-preview-popup');
+            const popupImg = popup.querySelector('img');
+            
+            previewTimer = setTimeout(() => {
+                popupImg.src = url;
+                popup.style.display = 'block';
+                
+                // 设置位置
+                const x = event.clientX + 20;
+                const y = event.clientY + 20;
+                
+                // 防止超出窗口
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                popup.style.left = (x + 400 > viewportWidth ? event.clientX - 420 : x) + 'px';
+                popup.style.top = (y + 400 > viewportHeight ? event.clientY - 420 : y) + 'px';
+            }, 1000);
+        }
+
+        function hideImagePreview() {
+            clearTimeout(previewTimer);
+            const popup = document.getElementById('image-preview-popup');
+            popup.style.display = 'none';
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showAlert('地址已复制到剪贴板', 'success');
+            } catch (err) {
+                console.error('无法复制: ', err);
+                // 备用方案
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showAlert('地址已复制到剪贴板', 'success');
+                } catch (err) {
+                    showAlert('复制失败', 'danger');
+                }
+                document.body.removeChild(textArea);
+            }
+        }
         
         function analyzeSVG() {
             const svgContent = document.getElementById('svgContent').value.trim();
@@ -475,11 +549,13 @@
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <img src="/image_proxy?url=${encodeURIComponent(img.url)}" 
                                  alt="图片预览" 
-                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e7eb;"
+                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #e5e7eb; cursor: zoom-in;"
+                                 onmouseenter="showImagePreview('/image_proxy?url=${encodeURIComponent(img.url)}', event)"
+                                 onmouseleave="hideImagePreview()"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                             <span style="display: none; width: 40px; height: 40px; background: #f3f4f6; border-radius: 4px; border: 1px solid #e5e7eb; text-align: center; line-height: 38px; font-size: 12px; color: #6b7280;">无法<br>预览</span>
-                            <a href="${img.url.includes('qpic.cn') ? '/image_proxy?url=' + encodeURIComponent(img.url) : img.url}" target="_blank" rel="noreferrer" class="text-decoration-none" style="color: #9CA3AF;">
-                                <i class="bi bi-box-arrow-up-right"></i> 
+                            <a href="javascript:void(0)" onclick="copyToClipboard('${img.url}')" class="text-decoration-none" style="color: #9CA3AF;" title="点击复制原始图片地址">
+                                <i class="bi bi-link-45deg"></i> 
                                 <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; max-width: 120px; vertical-align: top;">${img.url}</span>
                             </a>
                         </div>
